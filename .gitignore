@@ -1,0 +1,28 @@
+# .gitignore
+
+# Virtual environment
+venv/
+
+# Compiled Python files
+__pycache__/
+*.pyc
+
+# Logs and databases
+*.log
+*.sqlite3
+
+# Environment variables
+.env
+
+# Miscellaneous
+*.DS_Store
+*.pyc
+*.pyo
+*.pyc
+*.pyo
+*.pyc
+*.pyo
+
+# IDE-specific files (e.g., PyCharm)
+.idea/
+*.iml
