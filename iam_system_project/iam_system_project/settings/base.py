@@ -21,7 +21,9 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = []
 
-LOCAL_APPS = []
+LOCAL_APPS = [
+    'models', # This app is designed to store the models.
+]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -52,6 +54,8 @@ TEMPLATES = [
         },
     },
 ]
+
+AUTH_USER_MODEL = "models.CustomUser"
 
 WSGI_APPLICATION = 'iam_system_project.wsgi.application'
 
