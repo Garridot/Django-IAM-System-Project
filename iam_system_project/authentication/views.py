@@ -11,13 +11,24 @@ from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from django.shortcuts import render, redirect
 from django.views import View
-
 from django.urls import reverse_lazy
 
 from .forms import *
 
+from django.contrib.auth import logout
 
+from django.http import HttpResponseForbidden
+from functools import wraps
 
+def user_not_authenticated(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return HttpResponseForbidden("You are already logged in.")
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+@method_decorator(user_not_authenticated, name='dispatch')
 class CustomRegistrationView(View):
     form_class = CustomRegistrationForm
     template_name = 'accounts/registration.html'  
@@ -38,7 +49,8 @@ class CustomRegistrationView(View):
             return HttpResponseRedirect(self.success_url)
 
         return render(request, self.template_name, {'form': form})
- 
+
+@method_decorator(user_not_authenticated, name='dispatch')
 class CustomLoginView(View):
     template_name = 'accounts/login.html'
     success_url = reverse_lazy('profile')
@@ -61,7 +73,7 @@ class CustomLoginView(View):
         return render(request, self.template_name, {'form': form})
 
 @method_decorator(login_required, name='dispatch')
-class ProfileView(View):
+class CustomProfileView(View):
     template_name = 'accounts/user_profile.html'
 
     def get(self, request, *args, **kwargs):
@@ -88,22 +100,39 @@ class CustomPasswordUpdateView(PasswordResetView):
 
         return render(request, self.template_name, {'form': form})    
 
+@method_decorator(user_not_authenticated, name='dispatch')
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
     template_name = 'accounts/password_reset/password_reset.html'
     email_template_name = 'accounts/password_reset/password_reset_email.html'
     success_url = reverse_lazy('password_reset_done')
-
+ 
 @method_decorator(login_required, name='dispatch')
-class ProfileDeleteView(View):
-    model = CustomUser
-    template_name = 'accounts/profile_delete.html'  # Create this template
-    success_url = reverse_lazy('login')  # Create a URL for the success page
+class CustomDeleteAccountView(View):
+    template_name = 'accounts/delete_account.html'
+    success_url = reverse_lazy('login')  # Replace 'home' with your desired URL
 
     def get(self, request, *args, **kwargs):
-        user = self.request.user      
-        return render(request, self.template_name, {'user': user})
-    
+        form = DeleteAccountForm()
+        return render(request, self.template_name, {'form': form})
 
+    def post(self, request, *args, **kwargs):
+        form = DeleteAccountForm(request.POST)
+        if form.is_valid():
+            password = form.cleaned_data['password']
+            user = authenticate(request, email=request.user, password=password)
+
+            if user is not None and form.cleaned_data['confirmation']:                
+                # Perform account deletion logic here
+                request.user.delete()
+
+                # Log the user out
+                logout(request)
+
+                return redirect(self.success_url)
+
+        # If password or confirmation checkbox is not valid, show the form again
+        form.add_error('password', 'Invalid password or confirmation checkbox not checked.')
+        return render(request, self.template_name, {'form': form})
 
 
