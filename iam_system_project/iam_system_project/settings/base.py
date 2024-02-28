@@ -19,13 +19,38 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',  
 ]
 
-THIRD_PARTY_APPS = []
+THIRD_PARTY_APPS = [
+    'django_password_validators',
+]
 
 LOCAL_APPS = [
     'models', # This app is designed to store the models.
+    'authentication',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+AUTH_PASSWORD_VALIDATORS = [
+   
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 10,
+        }
+    }, 
+    
+    {
+        'NAME': 'django_password_validators.password_character_requirements.password_validation.PasswordCharacterValidator',
+        'OPTIONS': {
+             'min_length_digit': 1,
+             'min_length_alpha': 0,
+             'min_length_special': 1,
+             'min_length_lower': 1,
+             'min_length_upper': 1,
+             'special_characters': "~!@#$%^&*()_+{}\":;'[]"
+         }
+    },
+]
 
 MIDDLEWARE = [    
     'django.middleware.security.SecurityMiddleware',    
@@ -42,7 +67,7 @@ ROOT_URLCONF = 'iam_system_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # Add your project-specific templates directory
+        'DIRS': ['templates'],  # Add your project-specific templates directory
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -56,6 +81,8 @@ TEMPLATES = [
 ]
 
 AUTH_USER_MODEL = "models.CustomUser"
+
+ACCOUNT_ACTIVATION_DAYS = 7  # Number of days to wait for account activation
 
 WSGI_APPLICATION = 'iam_system_project.wsgi.application'
 

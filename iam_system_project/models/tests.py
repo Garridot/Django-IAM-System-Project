@@ -1,6 +1,7 @@
 from django.test import TestCase
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from .models import Role, UserRole
 from django.core.exceptions import ValidationError
 
 class CustomUserModelTest(TestCase):
@@ -50,3 +51,49 @@ class CustomUserModelTest(TestCase):
         with self.assertRaises(ValidationError) as cm:
             User.objects.create_user(email='test4@example.com', password='passw@rd123')
         self.assertIn('Password must contain at least one uppercase letter.', str(cm.exception))
+       
+
+# class RoleModelTest(TestCase):
+#     def test_create_role(self):
+#         role = Role.objects.create(
+#             name='TestRole',
+#             description='Test role description',
+#         )
+#         self.assertEqual(role.name, 'TestRole')
+#         self.assertEqual(role.description, 'Test role description')
+
+# class UserRoleModelTest(TestCase):
+#     def test_create_user_role(self):
+#         User = get_user_model()
+#         user = User.objects.create_user(
+#             email='user@example.com',
+#             password='userpassword123',
+#         )
+#         role = Role.objects.create(
+#             name='TestRole',
+#             description='Test role description',
+#         )
+#         user_role = UserRole.objects.create(
+#             user=user,
+#             role=role,
+#         )
+#         self.assertEqual(user_role.user, user)
+#         self.assertEqual(user_role.role, role)
+
+#     def test_user_role_str_representation(self):
+#         User = get_user_model()
+#         user = User.objects.create_user(
+#             email='user@example.com',
+#             password='userpassword123',
+#         )
+#         role = Role.objects.create(
+#             name='TestRole',
+#             description='Test role description',
+#         )
+#         user_role = UserRole.objects.create(
+#             user=user,
+#             role=role,
+#         )
+#         expected_str = f"{user} - {role}"
+#         self.assertEqual(str(user_role), expected_str)
+

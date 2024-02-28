@@ -91,3 +91,48 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name='user permissions',
         help_text='Specific permissions for this user.',
     )    
+
+
+# class Role(models.Model):
+#     "Represents a user role."
+#     name = models.CharField(max_length=255, unique=True)
+#     description = models.TextField()
+
+#     def __str__(self):
+#         return self.name
+
+# class UserRole(models.Model):
+#     """Represents the relationship between users and roles."""
+#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+#     role = models.ForeignKey(Role, on_delete=models.CASCADE)
+
+#     def __str__(self):
+#         return f"{self.user} - {self.role}"
+
+
+# class Permission(models.Model):
+#     name = models.CharField(max_length=255, unique=True)
+#     codename = models.CharField(max_length=255, unique=True)
+#     description = models.TextField()
+
+#     def __str__(self):
+#         return self.name
+
+
+# class AuditLog(models.Model):
+#     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True)
+#     action = models.CharField(max_length=255)
+#     timestamp = models.DateTimeField(auto_now_add=True)
+
+#     def __str__(self):
+#         return f"{self.user} - {self.action} - {self.timestamp}"
+
+# class Session(models.Model):
+#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+#     session_key = models.CharField(max_length=40, primary_key=True)
+#     expire_date = models.DateTimeField()
+
+#     def __str__(self):
+#         return f"{self.user} - {self.session_key}"
+
+
