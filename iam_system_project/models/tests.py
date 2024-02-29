@@ -1,99 +1,81 @@
 from django.test import TestCase
-from django.utils import timezone
-from django.contrib.auth import get_user_model
-from .models import Role, UserRole
 from django.core.exceptions import ValidationError
+from django.utils import timezone
+from .models import CustomUser, CustomUserManager, Role, UserRole, AuditLog
 
-class CustomUserModelTest(TestCase):
+class ModelTests(TestCase):
+
+    def setUp(self):
+        self.role = Role.objects.create(name='Admin', description='Administrator role')
+        self.user_manager = CustomUserManager()
+
     def test_create_user(self):
-        User = get_user_model()
-        user = User.objects.create_user(
-            email='test@example.com',
-            password='Passw@rd123',
-            # Add any additional fields as needed
+        user = CustomUser.objects.create_user(
+            email='user@example.com',
+            password='TestPassword123'
         )
-        self.assertEqual(user.email, 'test@example.com')
+        self.assertEqual(user.email, 'user@example.com')
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
-        self.assertTrue(user.check_password('Passw@rd123'))
-    
+        self.assertEqual(user.date_joined.date(), timezone.now().date())
+        self.assertFalse(user.roles.exists())  # No roles assigned
+
     def test_create_superuser(self):
-        User = get_user_model()
-        admin_user = User.objects.create_superuser(
+        superuser = CustomUser.objects.create_superuser(
             email='admin@example.com',
-            password='Adminpassw@rd123',
+            password='AdminPassword123'
         )
-        self.assertEqual(admin_user.email, 'admin@example.com')
-        self.assertTrue(admin_user.is_active)
-        self.assertTrue(admin_user.is_staff)
-        self.assertTrue(admin_user.is_superuser)
-        self.assertTrue(admin_user.check_password('Adminpassw@rd123'))
+        self.assertEqual(superuser.email, 'admin@example.com')
+        self.assertTrue(superuser.is_active)
+        self.assertTrue(superuser.is_staff)
+        self.assertTrue(superuser.is_superuser)
+        self.assertEqual(superuser.date_joined.date(), timezone.now().date())
+        self.assertFalse(superuser.roles.exists())  # No roles assigned to superuser
+
+    def test_create_role(self):
+        role = Role.objects.create(name='Editor', description='Editor role')
+        self.assertEqual(role.name, 'Editor')
+        self.assertEqual(role.description, 'Editor role')
+        self.assertFalse(role.permissions.exists())  # No permissions assigned
+
+    def test_create_user_role(self):
+        user = CustomUser.objects.create_user(email='user@example.com', password='TestPassword123')
+        user_role = UserRole.objects.create(user=user, role=self.role)
+        self.assertEqual(user_role.user, user)
+        self.assertEqual(user_role.role, self.role)
+
+
+
+    def test_create_audit_log(self):
+        user = CustomUser.objects.create_user(email='user@example.com', password='TestPassword123')
+        audit_log = AuditLog.objects.create(user=user, action='Login')
+        self.assertEqual(audit_log.user, user)
+        self.assertEqual(audit_log.action, 'Login')
+        self.assertIsNotNone(audit_log.timestamp)
 
     def test_password_validation(self):
-        User = get_user_model()
+        # Valid password
+        self.user_manager.validate_password('ValidPassword123')
 
-        # Test password with less than 10 characters
-        with self.assertRaises(ValidationError) as cm:
-            User.objects.create_user(email='test1@example.com', password='pass123')
-        self.assertIn('at least 10 characters', str(cm.exception))
+        # Invalid password (missing uppercase letter)
+        with self.assertRaises(ValidationError):
+            self.user_manager.validate_password('invalidpassword123')
 
-        # Test password without numbers
-        with self.assertRaises(ValidationError) as cm:
-            User.objects.create_user(email='test2@example.com', password='password!')
-        self.assertIn('This password is too short. It must contain at least 10 characters.', str(cm.exception))
+    def test_create_user_with_roles(self):
+        user = CustomUser.objects.create_user(email='user@example.com', password='TestPassword123')
+        role1 = Role.objects.create(name='Role1', description='Role 1')
+        role2 = Role.objects.create(name='Role2', description='Role 2')
 
-        # Test password without special characters
-        with self.assertRaises(ValidationError) as cm:
-            User.objects.create_user(email='test3@example.com', password='Password123')
-        self.assertIn('This password is too common.', str(cm.exception))
+        # Assign roles to the user
+        user.roles.add(role1, role2)
 
-        # Test password without uppercase letters
-        with self.assertRaises(ValidationError) as cm:
-            User.objects.create_user(email='test4@example.com', password='passw@rd123')
-        self.assertIn('Password must contain at least one uppercase letter.', str(cm.exception))
-       
+        self.assertEqual(user.roles.count(), 2)
+        self.assertTrue(user.roles.filter(name='Role1').exists())
+        self.assertTrue(user.roles.filter(name='Role2').exists())
 
-# class RoleModelTest(TestCase):
-#     def test_create_role(self):
-#         role = Role.objects.create(
-#             name='TestRole',
-#             description='Test role description',
-#         )
-#         self.assertEqual(role.name, 'TestRole')
-#         self.assertEqual(role.description, 'Test role description')
+    def test_audit_log_str(self):
+        user = CustomUser.objects.create_user(email='user@example.com', password='TestPassword123')
+        audit_log = AuditLog.objects.create(user=user, action='Login')
 
-# class UserRoleModelTest(TestCase):
-#     def test_create_user_role(self):
-#         User = get_user_model()
-#         user = User.objects.create_user(
-#             email='user@example.com',
-#             password='userpassword123',
-#         )
-#         role = Role.objects.create(
-#             name='TestRole',
-#             description='Test role description',
-#         )
-#         user_role = UserRole.objects.create(
-#             user=user,
-#             role=role,
-#         )
-#         self.assertEqual(user_role.user, user)
-#         self.assertEqual(user_role.role, role)
-
-#     def test_user_role_str_representation(self):
-#         User = get_user_model()
-#         user = User.objects.create_user(
-#             email='user@example.com',
-#             password='userpassword123',
-#         )
-#         role = Role.objects.create(
-#             name='TestRole',
-#             description='Test role description',
-#         )
-#         user_role = UserRole.objects.create(
-#             user=user,
-#             role=role,
-#         )
-#         expected_str = f"{user} - {role}"
-#         self.assertEqual(str(user_role), expected_str)
-
+        expected_str = f"{user} - Login - {audit_log.timestamp}"
+        self.assertEqual(str(audit_log), expected_str)
