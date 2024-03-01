@@ -61,8 +61,12 @@ class CreateProjectView(View):
 @method_decorator(login_required, name='dispatch')
 class ProjectDetailView(View):
     model = Project
-    template_name = 'task_management/task_detail.html'
-    context_object_name = 'task'
+    template_name = 'task_management/project_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        project = Project.objects.get(id=int(kwargs.get('pk')))
+        context = {"project": project}
+        return render(request, self.template_name, context)
 
 @method_decorator(login_required, name='dispatch')
 class ProjectUpdateView(UpdateView):
@@ -88,15 +92,15 @@ class CreateTaskView(View):
     @method_decorator(login_required, name='dispatch')
     def get(self, request, *args, **kwargs):
 
-        form = self.form_class
-        project_id = int(kwargs.get('project_id'))  
+        form = self.form_class()
+        project_id = int(kwargs.get('pk'))  
         context = {'form': form,"project_id":project_id}       
         return render(request, self.template_name,context) 
 
     @method_decorator(login_required, name='dispatch')
     def post(self, request, *args, **kwargs):
 
-        project_id = int(kwargs.get('project_id'))  
+        project_id = int(kwargs.get('pk'))  
 
         form = self.form_class(request.POST)
         if form.is_valid():            
@@ -113,12 +117,12 @@ class TaskDetailView(View):
     template_name = 'task_management/task_detail.html'
 
     def get(self, request, *args, **kwargs):
-        task_id = int(kwargs.get('task_id'))
+        task_id = int(kwargs.get('pk'))
         task = Task.objects.get(id=task_id)
         return render(request, self.template_name, {'task': task})
 
     def post(self, request, *args, **kwargs):
-        task_id = int(kwargs.get('task_id'))
+        task_id = int(kwargs.get('pk'))
         task = Task.objects.get(id=task_id)
 
         if request.POST.get("perform_task"):

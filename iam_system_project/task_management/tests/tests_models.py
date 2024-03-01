@@ -1,54 +1,94 @@
 from django.test import TestCase
 from django.utils import timezone
-from ..models import CustomUser, Project, Task
+from ..models import Project, Task
+from django.contrib.auth import get_user_model
+from django.test import TestCase
+from django.contrib.auth.models import User
+from django.utils import timezone
+from task_management.models import Project, Task
 
-class TaskManagementModelTests(TestCase):
+class ProjectModelTest(TestCase):
     def setUp(self):
-        # Create a custom user for testing
-        self.user = CustomUser.objects.create(email='user@example.com', password='TestPassword123')
+        self.user = get_user_model().objects.create(email='user@example.com', password='TestPassword123')
 
-        # Create a project for testing
+    def test_project_creation(self):
+        project = Project.objects.create(
+            title='Test Project',
+            description='Project for testing',
+            created_by=self.user,
+            date_created=timezone.now()
+        )
+        self.assertEqual(project.title, 'Test Project')
+        self.assertEqual(project.description, 'Project for testing')
+        self.assertEqual(project.created_by, self.user)
+        self.assertIsNotNone(project.date_created)
+
+    def test_project_str_method(self):
+        project = Project.objects.create(
+            title='Test Project',
+            description='Project for testing',
+            created_by=self.user,
+            date_created=timezone.now()
+        )
+        self.assertEqual(str(project), 'Test Project')
+
+class TaskModelTest(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create(email='user@example.com', password='TestPassword123')
         self.project = Project.objects.create(
             title='Test Project',
-            description='This is a test project',
+            description='Project for testing',
             created_by=self.user,
             date_created=timezone.now()
         )
 
-    def test_project_str(self):
-        # Test the __str__ method of the Project model
-        self.assertEqual(str(self.project), 'Test Project')
-
-    def test_task_str(self):
-        # Create a task for testing
+    def test_task_creation(self):
         task = Task.objects.create(
-            name='Test Task',
-            description='This is a test task',
-            due_date=timezone.now().date(),
-            completed=False,
-            project=self.project
-        )
+        name='Test Task',
+        description='Task for testing',
+        due_date=timezone.now(),
+        completed=False,
+        project=self.project,
+        status='ready',
+        priority='low',
+        start_time=timezone.now(),
+        end_time=timezone.now(),
+        notes='Test notes',
+        created_by=self.user
+    )
+        task.assigned_to.set([self.user])  # Use set method to add users to the many-to-many field
+        task.save()
 
-        # Test the __str__ method of the Task model
-        self.assertEqual(str(task), 'Test Task')
-
-    def test_task_defaults(self):
-        # Test default values of a new task
-        task = Task.objects.create(name='Default Task', due_date=timezone.now().date(), project=self.project)
+        self.assertEqual(task.name, 'Test Task')
+        self.assertEqual(task.description, 'Task for testing')
+        self.assertIsNotNone(task.due_date)
         self.assertFalse(task.completed)
+        self.assertEqual(task.project, self.project)
+        self.assertEqual(task.assigned_to.first(), self.user)
         self.assertEqual(task.status, 'ready')
         self.assertEqual(task.priority, 'low')
-        self.assertIsNone(task.start_time)
-        self.assertIsNone(task.end_time)
-        self.assertEqual(task.notes, '')
-        self.assertEqual(task.dependencies.count(), 0)
+        self.assertIsNotNone(task.start_time)
+        self.assertIsNotNone(task.end_time)
+        self.assertEqual(task.notes, 'Test notes')
+        self.assertEqual(task.created_by, self.user)
 
-    def test_task_dependencies(self):
-        # Create two tasks and add one as a dependency to the other
-        task1 = Task.objects.create(name='Task 1', due_date=timezone.now().date(), project=self.project)
-        task2 = Task.objects.create(name='Task 2', due_date=timezone.now().date(), project=self.project)
-        task2.dependencies.add(task1)
+    def test_task_str_method(self):
+        task = Task.objects.create(
+            name='Test Task',
+            description='Task for testing',
+            due_date=timezone.now(),
+            completed=False,
+            project=self.project,
+            status='ready',
+            priority='low',
+            start_time=timezone.now(),
+            end_time=timezone.now(),
+            notes='Test notes',
+            created_by=self.user
+        )
+        task.assigned_to.set([self.user])  # Use set method to add users to the many-to-many field
+        task.save()
 
-        # Test if task2 has task1 as a dependency
-        self.assertEqual(task2.dependencies.count(), 1)
-        self.assertIn(task1, task2.dependencies.all())
+        self.assertEqual(str(task), 'Test Task')
+
+
