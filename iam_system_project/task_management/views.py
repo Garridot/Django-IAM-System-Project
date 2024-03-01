@@ -17,7 +17,8 @@ class DashboardView(View):
     def get(self, request, *args, **kwargs):                      
         tasks = Task.objects.all().order_by('priority', 'due_date')[0:10]
         context = {}  
-        context["task"] = tasks         
+        context["tasks"] = tasks        
+        
         return render(request, self.template_name, context)
 
 class ProjectListView(View):
@@ -118,17 +119,17 @@ class TaskDetailView(View):
 
     def get(self, request, *args, **kwargs):
         task_id = int(kwargs.get('pk'))
-        task = Task.objects.get(id=task_id)
+        task = Task.objects.get(id=task_id)        
         return render(request, self.template_name, {'task': task})
 
     def post(self, request, *args, **kwargs):
         task_id = int(kwargs.get('pk'))
-        task = Task.objects.get(id=task_id)
+        task = Task.objects.get(id=task_id)       
 
-        if request.POST.get("perform_task"):
+        if request.POST["perform_task"]:
             task.assigned_to.add(request.user)
-            task.save()
-        elif request.POST.get("cancel_task"):
+            task.save()           
+        elif request.POST["cancel_task"]:
             task.assigned_to.remove(request.user)
             task.save()
 
