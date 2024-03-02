@@ -12,13 +12,9 @@ class RoleAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 class UserRoleAdmin(admin.ModelAdmin):
-    list_display = ('id','user', 'role', 'display_permissions')
+    list_display = ('id','user', 'role',)
     search_fields = ('user__email', 'role__name')
     list_filter = ('role',)
-
-    def display_permissions(self, obj):
-        return ', '.join([str(permission) for permission in obj.permissions.all()])
-    display_permissions.short_description = 'Permissions'
 
 class AuditLogAdmin(admin.ModelAdmin):
     list_display = ('id','user', 'action', 'timestamp')
