@@ -126,10 +126,10 @@ class TaskDetailView(View):
         task_id = int(kwargs.get('pk'))
         task = Task.objects.get(id=task_id)       
 
-        if request.POST["perform_task"]:
+        if request.POST["chose"] == "perform_task":
             task.assigned_to.add(request.user)
             task.save()           
-        elif request.POST["cancel_task"]:
+        elif request.POST["chose"] == "cancel_task":
             task.assigned_to.remove(request.user)
             task.save()
 
