@@ -12,9 +12,13 @@ class RoleAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 class UserRoleAdmin(admin.ModelAdmin):
-    list_display = ('id','user', 'role',)
+    list_display = ('id','user', 'display_roles',)
     search_fields = ('user__email', 'role__name')
     list_filter = ('role',)
+
+    def display_roles(self, obj):
+        return ', '.join([str(rol) for rol in obj.role.all()])
+    display_roles.short_description = 'roles'
 
 class AuditLogAdmin(admin.ModelAdmin):
     list_display = ('id','user', 'action', 'timestamp')

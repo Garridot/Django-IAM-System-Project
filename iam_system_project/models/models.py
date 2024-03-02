@@ -64,7 +64,7 @@ class Role(models.Model):
 
 class UserRole(models.Model):    
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    role = models.ManyToManyField("Role")
 
     def __str__(self):
         return f"{self.user} - {self.role}"
