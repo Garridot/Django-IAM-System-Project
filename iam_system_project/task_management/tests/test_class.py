@@ -41,7 +41,7 @@ class ProjectTaskManagementTest(TestCase):
         # Login the user
         self.client.login(email= 'testuser@example.com',password= 'Testp@ssword123')
         # Access the create task view
-        response = self.client.get(reverse('task_create', kwargs={'pk': self.project.pk}))
+        response = self.client.get(reverse('task_create'))
         # Check that the response status code is 200
         self.assertEqual(response.status_code, 200)
         # Check that the form is present in the context

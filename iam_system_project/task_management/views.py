@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.views import View
 from django.views.generic import DetailView, UpdateView, DeleteView
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy,reverse
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
@@ -17,8 +17,11 @@ class DashboardView(View):
     def get(self, request, *args, **kwargs):                      
         tasks = Task.objects.all().order_by('priority', 'due_date')[0:10]
         context = {}  
-        context["tasks"] = tasks        
+        context["tasks"] = tasks     
         
+        user_role = UserRole.objects.get(user=request.user)
+        if any(role.name == "Admin" for role in user_role.role.all()): context["is_authorized"] = True                     
+        else: context["is_authorized"] = False     
         return render(request, self.template_name, context)
 
 class ProjectListView(View):
@@ -27,18 +30,10 @@ class ProjectListView(View):
     @method_decorator(login_required, name='dispatch')
     def get(self, request, *args, **kwargs): 
         projects = Project.objects.all()
-        return render(request, self.template_name,projects) 
-
-class TaskListView(View):
-    template_name = 'task_management/task_list.html'  
-
-    @method_decorator(login_required, name='dispatch')
-    def get(self, request, *args, **kwargs): 
-        tasks = Task.objects.all()
-        return render(request, self.template_name,tasks) 
+        return render(request, self.template_name,{"projects":projects}) 
 
 class CreateProjectView(View):    
-    template_name = 'task_management/create_project.html'   
+    template_name = 'task_management/project_create.html'   
     form_class  = ProjectForm 
     success_url = reverse_lazy("dashboard")
    
@@ -77,13 +72,17 @@ class ProjectUpdateView(UpdateView):
     context_object_name = 'project'
 
     def get_success_url(self):
-        return reverse_lazy('project_detail', kwargs={'pk': self.object.pk})
+        return reverse('project_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator(login_required, name='dispatch')
 class ProjectDeleteView(DeleteView):
     model = Project
     template_name = 'task_management/project_delete.html'
-    success_url = reverse_lazy('dashboard')
+    success_url = reverse_lazy('projects_list')
+    def post(self, request, *args, **kwargs):
+        obj = int(kwargs.get('pk'))
+        Project.objects.get(id=obj).delete()
+        return HttpResponseRedirect(self.success_url)
 
 class CreateTaskView(View):    
     template_name = 'task_management/task_create.html'   
@@ -92,26 +91,28 @@ class CreateTaskView(View):
    
     @method_decorator(login_required, name='dispatch')
     def get(self, request, *args, **kwargs):
-
-        form = self.form_class()
-        project_id = int(kwargs.get('pk'))  
-        context = {'form': form,"project_id":project_id}       
-        return render(request, self.template_name,context) 
+        form = self.form_class             
+        return render(request, self.template_name,{"form":form}) 
 
     @method_decorator(login_required, name='dispatch')
-    def post(self, request, *args, **kwargs):
-
-        project_id = int(kwargs.get('pk'))  
+    def post(self, request, *args, **kwargs):        
 
         form = self.form_class(request.POST)
         if form.is_valid():            
-            task = form.save(commit=False)
-            task.project    = Project.objects.get(id=project_id)
+            task = form.save(commit=False)            
             task.created_by = request.user            
             task.save()
             return HttpResponseRedirect(self.success_url)           
 
         return render(request, self.template_name, {'form': form})    
+
+class TaskListView(View):
+    template_name = 'task_management/task_list.html'  
+
+    @method_decorator(login_required, name='dispatch')
+    def get(self, request, *args, **kwargs): 
+        tasks = Task.objects.all()
+        return render(request, self.template_name,{"tasks":tasks}) 
 
 @method_decorator(login_required, name='dispatch')
 class TaskDetailView(View):
@@ -143,11 +144,16 @@ class TaskUpdateView(UpdateView):
     context_object_name = 'task'
 
     def get_success_url(self):
-        return reverse_lazy('task_detail', kwargs={'pk': self.object.pk})
+        return reverse('task_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator(login_required, name='dispatch')
 class TaskDeleteView(DeleteView):
     model = Task
     template_name = 'task_management/task_delete.html'
-    success_url = reverse_lazy('dashboard')
+    success_url = reverse_lazy('task_list')
+
+    def post(self, request, *args, **kwargs):
+        obj = int(kwargs.get('pk'))
+        Task.objects.get(id=obj).delete()
+        return HttpResponseRedirect(self.success_url)
 
