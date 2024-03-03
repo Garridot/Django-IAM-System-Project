@@ -1,0 +1,48 @@
+<style>
+    
+    .projects {
+        width: 95%;
+        margin: auto;
+    } 
+    h1{
+        text-align: center;
+        padding: 2rem 1rem;
+        font-size: xx-large;
+    }   
+    .projects li{
+        padding: .5rem 0;
+        display: flex;
+        justify-content: space-between;
+    }
+    .projects ul li a {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;     
+        /* color: rgb(36, 36, 36); */
+    }
+    .projects ul li p{
+        width: 33%;       
+    }
+</style>
+
+<section class="projects">
+    <h1>Projects</h1>
+    <ul>
+        <li style="font-weight: 900;">                
+            <p>Project Name</p> 
+            <p>Created By</p>
+            <p>Date Created</p>                       
+        </li>
+        {% if projects %}{% for project in projects %}
+        <li>
+            <a href="{% url 'project_detail' project.id %}">
+                <p>{{project.title}}</p> 
+                <p>{{project.created_by }}</p> 
+                <p>{{project.date_created}}</p>                
+            </a>
+        </li>
+        {% endfor %}{% else %}
+        <li>So far, there are no projects to show.</li>
+        {% endif %}
+    </ul>
+</section>    

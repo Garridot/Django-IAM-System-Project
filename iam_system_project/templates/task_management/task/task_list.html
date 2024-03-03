@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    
+    .tasks {
+        width: 95%;
+        margin: auto;
+    } 
+    h1{
+        text-align: center;
+        padding: 2rem 1rem;
+        font-size: xx-large;
+    }   
+    .tasks li{
+        padding: .5rem 0;
+        display: flex;
+        justify-content: space-between;
+    }
+    .tasks ul li a {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;     
+        /* color: rgb(36, 36, 36); */
+    }
+    .tasks ul li p{
+        width: 33%;       
+    }
+</style>
+
+<section class="tasks">
+    <h1>Tasks</h1>
+    <ul>
+        <li style="font-weight: 900;">                
+            <p>Task Name</p> 
+            <p>Assign</p>
+            <p>Status</p>
+            <p>Priority</p>
+            <p>Due Date</p>                
+        </li>
+        {% if tasks %}{% for task in tasks %}
+        <li>
+            <a href="{% url 'task_detail' task.id %}">
+                <p>{{task.name}}</p> 
+                <p>{{task.assigned_to.count}}</p>
+                <p>{{task.status}}</p>
+                <p>{{task.priority}}</p>
+                <p>{{task.due_date}}</p>
+            </a>
+        </li>
+        {% endfor %}{% else %}
+        <li>So far, there are no tasks to complete.</li>
+        {% endif %}
+    </ul>
+</section>    
+{% endblock %}

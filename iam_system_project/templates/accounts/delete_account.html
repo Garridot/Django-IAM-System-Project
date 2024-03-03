@@ -1,14 +1,16 @@
 <!-- accounts/profile_delete.html -->
 {% extends 'base.html' %}
-
 {% block content %}
-<h2>Delete Account</h2>
-<p>Are you sure you want to delete your account?</p>
+<div class="container-form">
+    <h2>Delete Account</h2>
 
 <form method="post">
-    {% csrf_token %}
+    {% csrf_token %}    
     {{ form.password.label_tag }} {{ form.password }}
-    {{ form.confirmation }} {{ form.confirmation.label_tag }}
+    <p>Are you sure you want to delete your account?</p>
+    <p style="display: flex !important; justify-content: space-between; width:85%">
+        {{ form.confirmation }} {{ form.confirmation.label_tag }}
+    </p>
     {% if form.confirmation.errors %}
         <p class="text-danger">{{ form.confirmation.errors }}</p>
     {% endif %}
@@ -16,7 +18,7 @@
         <p class="text-danger">{{ form.password.errors }}</p>
     {% endif %}
     <button type="submit">Delete Account</button>
+    <a href="{% url 'profile' %}">Cancel</a>
 </form>
-
-<a href="{% url 'profile' %}">Cancel</a>
+</div>
 {% endblock %}

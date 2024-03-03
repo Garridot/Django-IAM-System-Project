@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    .links__{
+        position: absolute;
+        right: 0%;
+        top: 0;
+        display: flex;
+        justify-content: space-between;
+        width: 8%;
+        padding: 1rem;
+    }
+    section{
+        display: flex;
+        justify-content: space-between;
+        height: 100vh;
+        align-items: center;
+        width: 95%;
+        margin: auto;
+    }
+    .description{
+        width: 45%;
+    }
+    .description li {
+    padding: 0.2rem 0;
+    font-size: medium;
+    list-style: none;
+    margin: 0;
+    color: rgb(32, 32, 32);
+    }
+    form{
+        width: 45%;
+    }
+</style>
+<section>
+    <div class="links__"><a href="{% url 'project_update' project.id %}">Edit</a><a href="{% url 'project_delete' project.id %}">Delete</a></div>    
+    <div class="description">
+        <h1>{{project.title}}</h1>
+        <li>Description:</li>
+        <li>{{project.description}}</li>        
+    </div>    
+</section>
+
+{% endblock %} 

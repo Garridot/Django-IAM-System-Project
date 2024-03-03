@@ -6,6 +6,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
+<style>
+    *{
+        margin: 0;
+        padding: 0;
+    }    
+
+    .container-form{
+        height: 100vh;
+        vertical-align: middle;
+        width: 100%;
+        display: flex;
+    }
+
+    .container-form h2{
+        text-align: center;
+        font-size: xx-large;
+        margin: 2rem 0 0 ;
+        position: absolute;
+        width: 100%;
+    }
+
+    form{
+        width: 50%;
+        margin: auto;
+        display: grid;
+    }
+    form p{
+        display: grid;
+        margin: .5rem 0;
+    }
+    form button{
+        padding: 0.3rem 0;
+        margin: 0.5rem 0;
+    }
+</style>
 <body>
     {% block content %}{% endblock %}   
 </body>
