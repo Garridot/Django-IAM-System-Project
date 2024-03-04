@@ -9,6 +9,29 @@ from django.utils.decorators import method_decorator
 from .forms import *
 from .models import *
 
+from functools import wraps
+from django.http import HttpResponseForbidden
+
+def user_has_role(allowed_roles):
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped_view(request, *args, **kwargs):
+            user_roles = UserRole.objects.filter(user=request.user)
+            
+            # Check if the user has any of the allowed roles
+            if any(role.name in allowed_roles for user_role in user_roles for role in user_role.role.all()):
+                return view_func(request, *args, **kwargs)
+            else:
+                return HttpResponseForbidden("You don't have permission to view this page.")
+        
+        return _wrapped_view
+
+    return decorator
+
+def is_authorized(user,role_selected):
+    user_role = UserRole.objects.get(user=user)
+    if any(role.name == role_selected for role in user_role.role.all()): 
+        return True
 
 class DashboardView(View):    
     template_name = 'task_management/dashboard.html'
@@ -17,15 +40,14 @@ class DashboardView(View):
     def get(self, request, *args, **kwargs):                      
         tasks = Task.objects.all().order_by('priority', 'due_date')[0:10]
         context = {}  
-        context["tasks"] = tasks     
-        
-        user_role = UserRole.objects.get(user=request.user)
-        if any(role.name == "Admin" for role in user_role.role.all()): context["is_authorized"] = True                     
+        context["tasks"] = tasks  
+
+        if is_authorized(request.user,"Admin"): context["is_authorized"] = True 
         else: context["is_authorized"] = False     
         return render(request, self.template_name, context)
 
 class ProjectListView(View):
-    template_name = 'task_management/projects_list.html'  
+    template_name = 'task_management/project/projects_list.html'  
 
     @method_decorator(login_required, name='dispatch')
     def get(self, request, *args, **kwargs): 
@@ -33,16 +55,18 @@ class ProjectListView(View):
         return render(request, self.template_name,{"projects":projects}) 
 
 class CreateProjectView(View):    
-    template_name = 'task_management/project_create.html'   
+    template_name = 'task_management/project/project_create.html'   
     form_class  = ProjectForm 
     success_url = reverse_lazy("dashboard")
    
     @method_decorator(login_required, name='dispatch')
+    @method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')
     def get(self, request, *args, **kwargs):
         form = self.form_class
         return render(request, self.template_name, {'form': form}) 
 
     @method_decorator(login_required, name='dispatch')
+    @method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')
     def post(self, request, *args, **kwargs):
         form = self.form_class(request.POST)
 
@@ -57,27 +81,33 @@ class CreateProjectView(View):
 @method_decorator(login_required, name='dispatch')
 class ProjectDetailView(View):
     model = Project
-    template_name = 'task_management/project_detail.html'
+    template_name = 'task_management/project/project_detail.html'
 
     def get(self, request, *args, **kwargs):
         project = Project.objects.get(id=int(kwargs.get('pk')))
         context = {"project": project}
+
+        if is_authorized(request.user,"Admin"): context["is_authorized"] = True 
+        else: context["is_authorized"] = False   
+
         return render(request, self.template_name, context)
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')
 class ProjectUpdateView(UpdateView):
     model = Project
     form_class = ProjectForm
-    template_name = 'task_management/project_update.html'
+    template_name = 'task_management/project/project_update.html'
     context_object_name = 'project'
 
     def get_success_url(self):
         return reverse('project_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')
 class ProjectDeleteView(DeleteView):
     model = Project
-    template_name = 'task_management/project_delete.html'
+    template_name = 'task_management/project/project_delete.html'
     success_url = reverse_lazy('projects_list')
     def post(self, request, *args, **kwargs):
         obj = int(kwargs.get('pk'))
@@ -85,16 +115,18 @@ class ProjectDeleteView(DeleteView):
         return HttpResponseRedirect(self.success_url)
 
 class CreateTaskView(View):    
-    template_name = 'task_management/task_create.html'   
+    template_name = 'task_management/task/task_create.html'   
     form_class  = TaskForm 
     success_url = reverse_lazy("dashboard") 
    
     @method_decorator(login_required, name='dispatch')
+    @method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')    
     def get(self, request, *args, **kwargs):
         form = self.form_class             
         return render(request, self.template_name,{"form":form}) 
 
     @method_decorator(login_required, name='dispatch')
+    @method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')
     def post(self, request, *args, **kwargs):        
 
         form = self.form_class(request.POST)
@@ -107,7 +139,7 @@ class CreateTaskView(View):
         return render(request, self.template_name, {'form': form})    
 
 class TaskListView(View):
-    template_name = 'task_management/task_list.html'  
+    template_name = 'task_management/task/task_list.html'  
 
     @method_decorator(login_required, name='dispatch')
     def get(self, request, *args, **kwargs): 
@@ -116,12 +148,17 @@ class TaskListView(View):
 
 @method_decorator(login_required, name='dispatch')
 class TaskDetailView(View):
-    template_name = 'task_management/task_detail.html'
+    template_name = 'task_management/task/task_detail.html'
 
     def get(self, request, *args, **kwargs):
         task_id = int(kwargs.get('pk'))
-        task = Task.objects.get(id=task_id)        
-        return render(request, self.template_name, {'task': task})
+        task = Task.objects.get(id=task_id)
+        context = {}
+        context["task"] = task
+        if is_authorized(request.user,"Admin"): context["is_authorized"] = True 
+        else: context["is_authorized"] = False   
+
+        return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
         task_id = int(kwargs.get('pk'))
@@ -137,19 +174,21 @@ class TaskDetailView(View):
         return render(request, self.template_name, {'task': task})
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')
 class TaskUpdateView(UpdateView):
     model = Task
     form_class = TaskForm
-    template_name = 'task_management/task_update.html'
+    template_name = 'task_management/task/task_update.html'
     context_object_name = 'task'
 
     def get_success_url(self):
         return reverse('task_detail', kwargs={'pk': self.object.pk})
 
 @method_decorator(login_required, name='dispatch')
+@method_decorator(user_has_role(['Admin', 'Engineer']), name='dispatch')
 class TaskDeleteView(DeleteView):
     model = Task
-    template_name = 'task_management/task_delete.html'
+    template_name = 'task_management/task/task_delete.html'
     success_url = reverse_lazy('task_list')
 
     def post(self, request, *args, **kwargs):
