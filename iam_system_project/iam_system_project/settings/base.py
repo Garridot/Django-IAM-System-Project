@@ -21,6 +21,7 @@ DJANGO_APPS = [
 
 THIRD_PARTY_APPS = [
     'django_password_validators',
+    'django_celery_results',
 ]
 
 LOCAL_APPS = [
@@ -95,3 +96,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
