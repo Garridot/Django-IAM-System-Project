@@ -2,6 +2,7 @@ from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash, login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import PasswordResetView
+from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.http import HttpResponseForbidden
 from django.shortcuts import render, redirect
@@ -10,9 +11,15 @@ from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.utils.decorators import method_decorator
 from functools import wraps
-
-# Import custom forms from the application
+from django.views.decorators.debug import sensitive_post_parameters
 from .forms import CustomRegistrationForm, CustomPasswordResetForm, DeleteAccountForm
+from django.utils.html import format_html
+from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.translation import gettext_lazy as _
+from .tasks import send_async_email
 
 # Decorator to ensure that the user is not authenticated
 def user_not_authenticated(view_func):
@@ -108,6 +115,8 @@ class CustomPasswordUpdateView(PasswordResetView):
             messages.error(request, 'Please correct the error below.')
         return render(request, self.template_name, {'form': form})
 
+
+
 # Class for custom password reset view
 class CustomPasswordResetView(PasswordResetView):
     form_class = CustomPasswordResetForm
@@ -115,10 +124,30 @@ class CustomPasswordResetView(PasswordResetView):
     email_template_name = 'accounts/password_reset/password_reset_email.html'
     success_url = reverse_lazy('password_reset_done')
 
-    # Apply decorator to ensure the user is not authenticated before dispatching
+    @method_decorator(never_cache)
+    @method_decorator(sensitive_post_parameters())
     @method_decorator(user_not_authenticated, name='dispatch')
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)    
+
+    def form_valid(self, form):
+        user = get_user_model().objects.get(email=form.cleaned_data['email'])
+        uidb64 = urlsafe_base64_encode(force_bytes(user.id))
+        token = default_token_generator.make_token(user)
+        reset_url = reverse_lazy('password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+
+        subject = _('Password Reset on MY APP!')
+        message = format_html(
+            _("You're receiving this email because you requested a password reset for your user account at MY APP."
+              "<br>Please click the following link to reset your password:<br><a href='{}' target='_blank' rel='noopener noreferrer'>Reset Password</a>"),
+            reset_url
+        )
+
+        recipient_list = [form.cleaned_data['email']]
+
+        send_async_email.delay(subject, message, recipient_list)
+        # Redirect the user to the success URL
+        return redirect(self.get_success_url())
 
 # Class for custom delete account view
 class CustomDeleteAccountView(View):
