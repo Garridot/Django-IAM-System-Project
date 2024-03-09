@@ -11,6 +11,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 SECRET_KEY = env('SECRET_KEY')
 
 DJANGO_APPS = [
+    "daphne",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -28,6 +29,7 @@ LOCAL_APPS = [
     'models', # This app is designed to store the models.
     'authentication',
     'task_management',
+    'chart'
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -86,7 +88,15 @@ AUTH_USER_MODEL = "models.CustomUser"
 
 ACCOUNT_ACTIVATION_DAYS = 7  # Number of days to wait for account activation
 
-WSGI_APPLICATION = 'iam_system_project.wsgi.application'
+# WSGI_APPLICATION = 'iam_system_project.wsgi.application'
+ASGI_APPLICATION = 'iam_system_project.asgi.application'
+
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
