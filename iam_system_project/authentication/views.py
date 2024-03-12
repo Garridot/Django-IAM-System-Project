@@ -20,6 +20,7 @@ from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.translation import gettext_lazy as _
 from .tasks import send_async_email
+from models.models import UserRole, Role 
 
 # Decorator to ensure that the user is not authenticated
 def user_not_authenticated(view_func):
@@ -48,8 +49,14 @@ class CustomRegistrationView(View):
     def post(self, request, *args, **kwargs):
         # Handle registration form submission for POST requests
         form = self.form_class(request.POST)
-        if form.is_valid():
+        if form.is_valid():            
             user = form.save()
+
+            # Create a UserRole instance with the new user and the role "Programmer"
+            programmer_role = Role.objects.get(name='Programmer')
+            user_role = UserRole.objects.create(user=user)
+            user_role.role.add(programmer_role)
+
             authenticated_user = authenticate(email=user.email, password=request.POST['password1'])
             login(request, authenticated_user)
             return HttpResponseRedirect(self.success_url)
