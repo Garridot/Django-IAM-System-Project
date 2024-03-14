@@ -36,7 +36,7 @@ def user_not_authenticated(view_func):
 class CustomRegistrationView(View):
     form_class = CustomRegistrationForm
     template_name = 'accounts/registration.html'
-    success_url = reverse_lazy('profile')
+    success_url = reverse_lazy('dashboard')
 
     # Apply decorator to ensure the user is not authenticated before dispatching
     @method_decorator(user_not_authenticated, name='dispatch')
@@ -65,7 +65,7 @@ class CustomRegistrationView(View):
 # Class for custom login view
 class CustomLoginView(View):
     template_name = 'accounts/login.html'
-    success_url = reverse_lazy('profile')
+    success_url = reverse_lazy('dashboard')
 
     # Apply decorator to ensure the user is not authenticated before dispatching
     @method_decorator(user_not_authenticated, name='dispatch')
