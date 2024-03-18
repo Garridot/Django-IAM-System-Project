@@ -71,6 +71,7 @@
 </style>
 
 <nav>
+    {% if is_authorized == True %}
     <div class="section-create">
         <button>+</button>
         <ul>
@@ -79,6 +80,7 @@
         </ul>
     </div> 
     <div class="perfil"><a href="{% url 'profile' %}">View Perfil</a></div>
+    {% endif %}
 </nav>
 <div class="container">    
     {% if is_authorized == True %}
