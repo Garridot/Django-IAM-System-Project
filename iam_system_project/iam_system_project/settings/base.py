@@ -29,7 +29,7 @@ LOCAL_APPS = [
     'models', # This app is designed to store the models.
     'authentication',
     'task_management',
-    'chart'
+    'chat'
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
