@@ -2,7 +2,9 @@
 
 ## Overview
 
-This project aims to develop a comprehensive Identity and Access Management (IAM) System using Django, providing robust user authentication, authorization, and security features. The IAM system will be designed to manage user identities, roles, and access control within a secure and scalable environment.
+This project aims to develop a comprehensive Identity and Access Management (IAM) System using Django, providing robust user authentication, authorization, and security features for a task management platform. The IAM system will implemented tasks asynchronously with Redis and Celery,
+working with WebSockets to implement chats in live time, improving the communication between the users, resulting in a general optimization of
+the project.
 
 ## Features
 
@@ -29,10 +31,6 @@ This project aims to develop a comprehensive Identity and Access Management (IAM
 6. **Admin Interface:**
    - Utilize Django's powerful and customizable admin interface for efficient management of user-related data.
 
-7. **Session Management:**
-   - Implement secure session management to prevent unauthorized access.
-   - Leverage Django's session framework for handling user sessions.
-
 8. **Password Recovery:**
    - Implement a secure process for users to recover or reset their passwords.
    - Include email-based password recovery mechanisms.
@@ -43,7 +41,8 @@ This project aims to develop a comprehensive Identity and Access Management (IAM
 
 ## Technologies Used
 
-- **Backend Framework:** [Django](https://www.djangoproject.com/)
+- **Backend Framework:** **Python** | **Django** | **Redis** | **Celery** | **WebSockets** | 
+
 - **Authentication System:**  Django comes with a robust built-in authentication system that provides user registration, login, and password recovery functionalities out of the box. It includes features such as password hashing, session management, and user model customization. Additionally, we may leverage third-party packages like `django-allauth` for enhanced authentication features.
 
 - **Security Measures:** We will follow Django's security guidelines to ensure a secure IAM system. This includes but is not limited to:
@@ -106,4 +105,5 @@ I will welcome your contributions to enhance and improve the Django IAM System p
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
 
