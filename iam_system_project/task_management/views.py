@@ -12,6 +12,8 @@ from .models import *
 from functools import wraps
 from django.http import HttpResponseForbidden
 
+from chat.views import create_chatroom,add_user_chatroom
+
 def user_has_role(allowed_roles):
     def decorator(view_func):
         @wraps(view_func)
@@ -76,7 +78,8 @@ class CreateProjectView(View):
         if form.is_valid():            
             project = form.save(commit=False)
             project.created_by = request.user
-            project.save()
+            project.save()        
+            create_chatroom(project.title)    
             return HttpResponseRedirect(self.success_url)           
 
         return render(request, self.template_name, {'form': form})    
@@ -153,7 +156,7 @@ class CreateTaskView(View):
         if form.is_valid():            
             task = form.save(commit=False)            
             task.created_by = request.user            
-            task.save()
+            task.save()            
             return HttpResponseRedirect(self.success_url)           
 
         return render(request, self.template_name, {'form': form})    
@@ -182,14 +185,15 @@ class TaskDetailView(View):
 
     def post(self, request, *args, **kwargs):
         task_id = int(kwargs.get('pk'))
-        task = Task.objects.get(id=task_id)       
-
+        task = Task.objects.get(id=task_id)           
         if request.POST["chose"] == "perform_task":
-            task.assigned_to.add(request.user)
-            task.save()           
+            task.assigned_to.add(request.user)                        
+            task.save()
         elif request.POST["chose"] == "cancel_task":
             task.assigned_to.remove(request.user)
             task.save()
+
+        add_user_chatroom(request.POST["chose"],task,request.user)     
 
         return render(request, self.template_name, {'task': task})
 
